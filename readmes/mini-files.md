@@ -240,6 +240,8 @@ Here are code snippets for some common installation methods (use only one):
     width_nofocus = 15,
     -- Width of preview window
     width_preview = 25,
+    -- Width of preview window for files (defaults to width_preview if nil)
+    width_file_preview = nil
   },
 }
 ```

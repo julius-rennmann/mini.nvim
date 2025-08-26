@@ -713,6 +713,8 @@ MiniFiles.config = {
     width_nofocus = 15,
     -- Width of preview window
     width_preview = 25,
+    -- Width of preview window for files (defaults to width_preview if nil)
+    width_file_preview = nil
   },
 }
 --minidoc_afterlines_end
@@ -1306,6 +1308,7 @@ H.setup_config = function(config)
   H.check_type('windows.width_focus', config.windows.width_focus, 'number')
   H.check_type('windows.width_nofocus', config.windows.width_nofocus, 'number')
   H.check_type('windows.width_preview', config.windows.width_preview, 'number')
+  H.check_type('windows.width_file_preview', config.windows.width_file_preview, 'number', true)
 
   return config
 end
@@ -1742,9 +1745,12 @@ H.explorer_refresh_depth_window = function(explorer, depth, win_count, win_col)
 
   -- Compute width based on window role
   local win_is_focused = depth == explorer.depth_focus
+  local cur_width = win_is_focused and opts.windows.width_focus or opts.windows.width_nofocus
   local win_is_preview = opts.windows.preview and (depth == (explorer.depth_focus + 1))
-  local cur_width = win_is_focused and opts.windows.width_focus
-    or (win_is_preview and opts.windows.width_preview or opts.windows.width_nofocus)
+  if win_is_preview then
+    local fs_type = opts.windows.width_file_preview and H.fs_get_type(path)
+    cur_width = fs_type == 'file' and opts.windows.width_file_preview or opts.windows.width_preview
+  end
 
   -- Prepare target view
   local view = views[path] or {}
@@ -1935,8 +1941,12 @@ H.compute_visible_depth_range = function(explorer, opts)
   -- Add 2 to widths to take into account width of left and right borders
   local width_focus, width_nofocus = opts.windows.width_focus + 2, opts.windows.width_nofocus + 2
 
+  local width_preview = width_nofocus
   local has_preview = explorer.opts.windows.preview and explorer.depth_focus < #explorer.branch
-  local width_preview = has_preview and (opts.windows.width_preview + 2) or width_nofocus
+  if has_preview then
+    local fs_type = opts.windows.width_file_preview and H.fs_get_type(explorer.branch[explorer.depth_focus + 1])
+    width_preview = fs_type == 'file' and (opts.windows.width_file_preview + 2) or (opts.windows.width_preview + 2)
+  end
 
   local max_number = 1
   if (width_focus + width_preview) <= vim.o.columns then max_number = max_number + 1 end

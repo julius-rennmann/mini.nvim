@@ -261,6 +261,7 @@ T['setup()']['creates `config` field'] = function()
   expect_config('windows.width_focus', 50)
   expect_config('windows.width_nofocus', 15)
   expect_config('windows.width_preview', 25)
+  expect_config('windows.width_file_preview', vim.NIL)
 end
 
 T['setup()']['respects `config` argument'] = function()
@@ -305,6 +306,7 @@ T['setup()']['validates `config` argument'] = function()
   expect_config_error({ windows = { width_focus = 'a' } }, 'windows.width_focus', 'number')
   expect_config_error({ windows = { width_nofocus = 'a' } }, 'windows.width_nofocus', 'number')
   expect_config_error({ windows = { width_preview = 'a' } }, 'windows.width_preview', 'number')
+  expect_config_error({ windows = { width_file_preview = 'a' } }, 'windows.width_file_preview', 'number')
 end
 
 T['setup()']['ensures colors'] = function()
@@ -893,6 +895,36 @@ T['open()']['respects `windows.width_preview`'] = function()
 
   -- Local value from argument should take precedence
   open(test_path, false, { windows = { width_focus = 20, width_preview = 30 } })
+  child.expect_screenshot()
+end
+
+T['open()']['respects `windows.width_file_preview`'] = function()
+  child.lua('MiniFiles.config.windows.preview = true')
+  child.lua('MiniFiles.config.windows.width_focus = 20')
+  child.lua('MiniFiles.config.windows.width_nofocus = 10')
+  child.lua('MiniFiles.config.windows.width_preview = 15')
+  child.lua('MiniFiles.config.windows.width_file_preview = 25')
+
+  local test_path = make_test_path('common')
+
+  -- Preview window is to the right of focused one (if preview is active)
+  open(test_path)
+  child.expect_screenshot()
+  type_keys("j")
+  go_in()
+  child.expect_screenshot()
+  go_in()
+  child.expect_screenshot()
+  go_out()
+  child.expect_screenshot()
+  go_out()
+  child.expect_screenshot()
+
+  close()
+
+  -- Local value from argument should take precedence
+  open(test_path, false, { windows = { width_focus = 20, width_file_preview = 30 } })
+  type_keys("4j")
   child.expect_screenshot()
 end
 
